@@ -1,11 +1,11 @@
 {
-  "Title": "FreeCam",
-  "Id": "bm.mors.freecam",
-  "DLLFile": "FreeCam.dll",
-  "Description": "A mod that allows you to freely manipulate the in-game camera using the keyboard.",
+  "Title": "DynamicRoll",
+  "Id": "bm.snowman.dynamicroll",
+  "DLLFile": "DynamicRoll.dll",
+  "Description": "A mod that changes ball rolling sounds based on speed",
   "Version": "0.9.1",
-  "Date": "21/09/2021",
-  "Author": "Mors",
-  "AuthorURL": "http://mors-games.com/",
+  "Date": "10/09/2021",
+  "Author": "Snowman",
+  "AuthorURL": "https://github.com/MilesBradt",
   "UpdateServer": ""
 }

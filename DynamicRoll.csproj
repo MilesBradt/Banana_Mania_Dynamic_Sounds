@@ -7,8 +7,8 @@
     <ProjectGuid>{8D456194-8DC5-4C4B-A9CE-AEF50AF59A68}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FreeCam</RootNamespace>
-    <AssemblyName>FreeCam</AssemblyName>
+    <RootNamespace>DynamicRoll</RootNamespace>
+    <AssemblyName>DynamicRoll</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
