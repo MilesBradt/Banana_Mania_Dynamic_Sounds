@@ -14,21 +14,24 @@ namespace DynamicRoll
         private Player _player;
         private CriAtomExPlayer _ballroll;
         private CriAtomExPlayer _spark;
+        private CriAtomExPlayback _playback;
 
         internal void Awake()
         {
             _player = FindObjectOfType<Player>();
 
             // Reads acb file from current directory
-            string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"se_com.acb");
+            string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"ballroll_default.acb");
 
             _ballroll = new CriAtomExPlayer();
             _spark = new CriAtomExPlayer();
             
             CriAtomExAcb acb = CriAtomExAcb.LoadAcbFile(null, path, null);
-            _ballroll.SetCue(acb, "ballroll");
-            _spark.SetCue(acb, "1up");
-            
+            _ballroll.SetCue(acb, "1up");
+            _playback = _ballroll.Start();
+            _ballroll.Update(_playback);
+            /*_spark.SetCue(acb, "1up");*/
+
         }
 
         internal void Update()
@@ -37,38 +40,37 @@ namespace DynamicRoll
             var rounded = Math.Round(playerSpeed, 2);
 
             // My best guess on the formulas they used in the GC games based on audio
-            var pitch = (float)(14.73f * rounded) - 511.08f;
+            var pitch = (float)(10.14f * rounded) - 574.23f;
             var sparkPitch = (float)(14.32f * rounded) - 487.13f;
 
-            /*Console.WriteLine(_player.IsOnGround());*/
-            Console.WriteLine("rolling: " + _ballroll.GetStatus());
-            Console.WriteLine("spark: " + _spark.GetStatus());
-
-            if (_player.IsOnGround() == false || rounded < 4.6f)
+            if (_player.IsOnGround() == false || rounded <= 5f || GameManager.IsPause())
             {
                 _ballroll.Stop();
                 _spark.Stop();
-            }
-
-            
-            if ((_ballroll.GetStatus() == CriAtomExPlayer.Status.Playing || _ballroll.GetStatus() == CriAtomExPlayer.Status.Prep))
-            {
-                return;
             } 
-            else if (_player.IsOnGround() && rounded >= 4.6f)
-            { 
-                _ballroll.SetPitch(pitch);
-                _ballroll.Update(_ballroll.Start());
-            } 
+            else if (_player.IsOnGround() && rounded > 5f)
+            {
+                
+                    if (_ballroll.GetStatus() == CriAtomExPlayer.Status.Playing)
 
-            if ((_spark.GetStatus() == CriAtomExPlayer.Status.Playing || _spark.GetStatus() == CriAtomExPlayer.Status.Prep))
-            {
-                return;
-            } else if (_player.IsOnGround() && rounded >= 22.6f)
-            {
-                _spark.SetVolume(0.5f);
-                _spark.Update(_spark.Start()); 
-            }
+                    {
+                        if (pitch >= 1100f)
+                        {
+                            _ballroll.SetPitch(1100f);
+                            _ballroll.Update(_playback);
+                        } else
+                        {
+                            _ballroll.SetPitch(pitch);
+                            _ballroll.Update(_playback);
+                        }
+                    } else if (_ballroll.GetStatus() == CriAtomExPlayer.Status.Stop)
+                    {
+                        _playback = _ballroll.Start();
+                        _ballroll.SetPitch(pitch);
+                        _ballroll.Update(_playback);
+                        return;
+                    }
+            } 
         }
     }
 }
