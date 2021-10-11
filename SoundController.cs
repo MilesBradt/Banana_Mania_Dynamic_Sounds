@@ -72,5 +72,11 @@ namespace DynamicRoll
                     }
             } 
         }
+
+        private void OnDisable()
+        {
+            _ballroll.Stop();
+            _spark.Stop();
+        }
     }
 }
