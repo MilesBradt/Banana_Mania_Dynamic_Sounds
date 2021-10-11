@@ -15,6 +15,7 @@ namespace DynamicRoll
         private CriAtomExPlayer _ballroll;
         private CriAtomExPlayer _spark;
         private CriAtomExPlayback _playback;
+        private CriAtomExPlayback _sparkPlayback;
 
         internal void Awake()
         {
@@ -22,6 +23,7 @@ namespace DynamicRoll
 
             // Reads acb file from current directory
             string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"ballroll_default.acb");
+            string sparkPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"spark_default.acb");
 
             _ballroll = new CriAtomExPlayer();
             _spark = new CriAtomExPlayer();
@@ -30,7 +32,12 @@ namespace DynamicRoll
             _ballroll.SetCue(acb, "1up");
             _playback = _ballroll.Start();
             _ballroll.Update(_playback);
-            /*_spark.SetCue(acb, "1up");*/
+
+            CriAtomExAcb sparkAcb = CriAtomExAcb.LoadAcbFile(null, sparkPath, null);
+            _spark.SetCue(sparkAcb, "1up");
+            _sparkPlayback = _spark.Start();
+            _spark.Update(_sparkPlayback);
+           
 
         }
 
@@ -47,31 +54,56 @@ namespace DynamicRoll
             {
                 _ballroll.Stop();
                 _spark.Stop();
-            } 
-            else if (_player.IsOnGround() && rounded > 5f)
-            {
-                
-                    if (_ballroll.GetStatus() == CriAtomExPlayer.Status.Playing)
+            }
 
+            if (_player.IsOnGround() && rounded > 5f)
+            {
+                if (_ballroll.GetStatus() == CriAtomExPlayer.Status.Playing)
+                {
+                    if (pitch >= 1100f)
                     {
-                        if (pitch >= 1100f)
-                        {
-                            _ballroll.SetPitch(1100f);
-                            _ballroll.Update(_playback);
-                        } else
-                        {
-                            _ballroll.SetPitch(pitch);
-                            _ballroll.Update(_playback);
-                        }
-                    } else if (_ballroll.GetStatus() == CriAtomExPlayer.Status.Stop)
+                        _ballroll.SetPitch(1100f);
+                        _ballroll.Update(_playback);
+                    }
+                    else
                     {
-                        _playback = _ballroll.Start();
                         _ballroll.SetPitch(pitch);
                         _ballroll.Update(_playback);
-                        return;
                     }
-            } 
+                }
+                else if (_ballroll.GetStatus() == CriAtomExPlayer.Status.Stop)
+                {
+                    _playback = _ballroll.Start();
+                    _ballroll.SetPitch(pitch);
+                    _ballroll.Update(_playback);
+                }
+            }
+            
+            if (_player.IsOnGround() && rounded > 40f && _ballroll.GetStatus() == CriAtomExPlayer.Status.Playing)
+            {
+                if (_spark.GetStatus() == CriAtomExPlayer.Status.Playing)
+                {
+                    if (pitch >= 1100f)
+                    {
+                        _spark.SetPitch(1100f);
+                        _spark.Update(_sparkPlayback);
+                    }
+                    else
+                    {
+                        _spark.SetPitch(pitch);
+                        _spark.Update(_sparkPlayback);
+                    }
+                }
+                else if (_spark.GetStatus() == CriAtomExPlayer.Status.Stop)
+                {
+                    _sparkPlayback = _spark.Start();
+                    _spark.SetPitch(pitch);
+                    _spark.Update(_sparkPlayback);
+                }
+            }
         }
+
+
 
         private void OnDisable()
         {
