@@ -3,7 +3,7 @@
   "Id": "bm.snowman.dynamicroll",
   "DLLFile": "DynamicRoll.dll",
   "Description": "A mod that changes ball rolling sounds based on speed",
-  "Version": "0.9.1",
+  "Version": "0.9.2",
   "Date": "10/09/2021",
   "Author": "Snowman",
   "AuthorURL": "https://github.com/MilesBradt",

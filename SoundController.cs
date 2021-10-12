@@ -55,11 +55,15 @@ namespace DynamicRoll
             var sparkPitch = (float)(11.673f * rounded) - 844.251f;
             var sparkVol = (float)(0.004f * rounded) - 0.008f;
 
-            // Flags for disabling sound
+            // Flags to mute sound, prevents audio popping
             if (_player.IsOnGround() == false || rounded <= 4f || GameManager.IsPause())
             {
-                _ballroll.Stop();
-                _spark.Stop();
+                _ballroll.SetVolume(0.0f);
+                _ballroll.Update(_ballrollPlayback);
+
+                _spark.SetVolume(0.0f);
+                _spark.Update(_sparkPlayback);
+
                 startTime = 0;
             }
 
@@ -75,11 +79,13 @@ namespace DynamicRoll
                     // Max threshold for pitch shifting
                     if (ballrollPitch >= 1100f)
                     {
+                        _ballroll.SetVolume(1f);
                         _ballroll.SetPitch(1100f);
                         _ballroll.Update(_ballrollPlayback);
                     }
                     else
                     {
+                        _ballroll.SetVolume(1f);
                         _ballroll.SetPitch(ballrollPitch);
                         _ballroll.Update(_ballrollPlayback);
                     }
@@ -87,6 +93,7 @@ namespace DynamicRoll
                 else if (_ballroll.GetStatus() == CriAtomExPlayer.Status.Stop && startTime >= 0.4f)
                 {
                     _ballrollPlayback = _ballroll.Start();
+                    _ballroll.SetVolume(1f);
                     _ballroll.SetPitch(ballrollPitch);
                     _ballroll.Update(_ballrollPlayback);
                 }
