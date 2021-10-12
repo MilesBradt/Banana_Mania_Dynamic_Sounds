@@ -53,10 +53,10 @@ namespace DynamicRoll
             // My best guess on the linear equations they used in the GC games based on audio
             var ballrollPitch = (float)(10.14f * rounded) - 574.23f;
             var sparkPitch = (float)(11.673f * rounded) - 844.251f;
-            var sparkVol = (float)(0.004f * rounded) - 0.008f;
+            var sparkVol = (float)(0.004f * rounded) - 0.011f;
 
             // Flags to mute sound, prevents audio popping
-            if (_player.IsOnGround() == false || rounded <= 4f || GameManager.IsPause())
+            if (_player.IsOnGround() == false || rounded <= 3f || GameManager.IsPause())
             {
                 _ballroll.SetVolume(0.0f);
                 _ballroll.Update(_ballrollPlayback);
@@ -68,13 +68,13 @@ namespace DynamicRoll
             }
 
             // Flags for enabling sound
-            if (_player.IsOnGround() && rounded > 4f)
+            if (_player.IsOnGround() && rounded > 3f)
             {
                 // Counts how long enabled flag is lasting
                 startTime += Time.deltaTime;
    
                 // If on the ground for more than 0.4 seconds, play sounds
-                if (_ballroll.GetStatus() == CriAtomExPlayer.Status.Playing && startTime >= 0.4f)
+                if (_ballroll.GetStatus() == CriAtomExPlayer.Status.Playing && startTime >= 0.5f)
                 {
                     // Max threshold for pitch shifting
                     if (ballrollPitch >= 1100f)
@@ -90,7 +90,7 @@ namespace DynamicRoll
                         _ballroll.Update(_ballrollPlayback);
                     }
                 }
-                else if (_ballroll.GetStatus() == CriAtomExPlayer.Status.Stop && startTime >= 0.4f)
+                else if (_ballroll.GetStatus() == CriAtomExPlayer.Status.Stop && startTime >= 0.5f)
                 {
                     _ballrollPlayback = _ballroll.Start();
                     _ballroll.SetVolume(1f);
@@ -100,14 +100,14 @@ namespace DynamicRoll
             }
             
             // Same thing just for spark sounds
-            if (_player.IsOnGround() && rounded > 40f && _ballroll.GetStatus() == CriAtomExPlayer.Status.Playing && startTime >= 0.4f)
+            if (_player.IsOnGround() && rounded > 40f && _ballroll.GetStatus() == CriAtomExPlayer.Status.Playing && startTime >= 0.5f)
             {
                 if (_spark.GetStatus() == CriAtomExPlayer.Status.Playing)
                 {
                     if (sparkPitch >= 1100f)
                     {
                         _spark.SetPitch(1100f);
-                        _spark.SetVolume(0.7f);
+                        _spark.SetVolume(0.6f);
                         _spark.Update(_sparkPlayback);
                     }
                     else
@@ -117,7 +117,7 @@ namespace DynamicRoll
                         _spark.Update(_sparkPlayback);
                     }
                 }
-                else if (_spark.GetStatus() == CriAtomExPlayer.Status.Stop && startTime >= 0.4f)
+                else if (_spark.GetStatus() == CriAtomExPlayer.Status.Stop && startTime >= 0.5f)
                 {
                     _sparkPlayback = _spark.Start();
                     _spark.SetPitch(sparkPitch);
