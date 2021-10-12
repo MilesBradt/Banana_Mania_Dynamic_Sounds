@@ -7,6 +7,7 @@ using Object = UnityEngine.Object;
 
 namespace DynamicRoll
 {
+    // Honestly I don't know C# well enough, this just works and I'm not touching it
     public static class Main
     {
         private static SoundController _dynamicRoll;
@@ -30,10 +31,8 @@ namespace DynamicRoll
 
             if (_dynamicRoll == null)
             {
-
                 _cameraController = player.GetCameraController();
-                _dynamicRoll = new SoundController(_cameraController.gameObject.AddComponent(Il2CppType.Of<SoundController>()).Pointer);
-                
+                _dynamicRoll = new SoundController(_cameraController.gameObject.AddComponent(Il2CppType.Of<SoundController>()).Pointer); 
             } 
         }
     }

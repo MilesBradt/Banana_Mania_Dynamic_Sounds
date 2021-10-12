@@ -14,7 +14,7 @@ namespace DynamicRoll
         private Player _player;
         private CriAtomExPlayer _ballroll;
         private CriAtomExPlayer _spark;
-        private CriAtomExPlayback _playback;
+        private CriAtomExPlayback _ballrollPlayback;
         private CriAtomExPlayback _sparkPlayback;
 
         private float startTime;
@@ -27,13 +27,15 @@ namespace DynamicRoll
             string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"ballroll_default.acb");
             string sparkPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"spark_default.acb");
 
+            // Create new sound player
             _ballroll = new CriAtomExPlayer();
             _spark = new CriAtomExPlayer();
             
-            CriAtomExAcb acb = CriAtomExAcb.LoadAcbFile(null, path, null);
-            _ballroll.SetCue(acb, "1up");
-            _playback = _ballroll.Start();
-            _ballroll.Update(_playback);
+            // Load specific sounds from sound bank
+            CriAtomExAcb ballrollAcb = CriAtomExAcb.LoadAcbFile(null, path, null);
+            _ballroll.SetCue(ballrollAcb, "1up");
+            _ballrollPlayback = _ballroll.Start();
+            _ballroll.Update(_ballrollPlayback);
 
             CriAtomExAcb sparkAcb = CriAtomExAcb.LoadAcbFile(null, sparkPath, null);
             _spark.SetCue(sparkAcb, "1up");
@@ -44,60 +46,67 @@ namespace DynamicRoll
 
         internal void Update()
         {
+            // Calculated speed based off square magnitude, multiplied and rounded to X.XX
             var playerSpeed = _player.m_PhysicsBall.m_Velocity.sqrMagnitude * 1000f;
             var rounded = Math.Round(playerSpeed, 2);
 
-            // My best guess on the formulas they used in the GC games based on audio
-            var pitch = (float)(10.14f * rounded) - 574.23f;
+            // My best guess on the linear equations they used in the GC games based on audio
+            var ballrollPitch = (float)(10.14f * rounded) - 574.23f;
             var sparkPitch = (float)(11.673f * rounded) - 844.251f;
-            var sparVol = (float)(0.006f * rounded) - 0.111f;
+            var sparkVol = (float)(0.004f * rounded) - 0.008f;
 
-            if (_player.IsOnGround() == false || rounded <= 5f || GameManager.IsPause())
+            // Flags for disabling sound
+            if (_player.IsOnGround() == false || rounded <= 4f || GameManager.IsPause())
             {
                 _ballroll.Stop();
                 _spark.Stop();
                 startTime = 0;
             }
 
-            if (_player.IsOnGround() && rounded > 5f)
+            // Flags for enabling sound
+            if (_player.IsOnGround() && rounded > 4f)
             {
+                // Counts how long enabled flag is lasting
                 startTime += Time.deltaTime;
    
+                // If on the ground for more than 0.4 seconds, play sounds
                 if (_ballroll.GetStatus() == CriAtomExPlayer.Status.Playing && startTime >= 0.4f)
                 {
-                    if (pitch >= 1100f)
+                    // Max threshold for pitch shifting
+                    if (ballrollPitch >= 1100f)
                     {
                         _ballroll.SetPitch(1100f);
-                        _ballroll.Update(_playback);
+                        _ballroll.Update(_ballrollPlayback);
                     }
                     else
                     {
-                        _ballroll.SetPitch(pitch);
-                        _ballroll.Update(_playback);
+                        _ballroll.SetPitch(ballrollPitch);
+                        _ballroll.Update(_ballrollPlayback);
                     }
                 }
                 else if (_ballroll.GetStatus() == CriAtomExPlayer.Status.Stop && startTime >= 0.4f)
                 {
-                    _playback = _ballroll.Start();
-                    _ballroll.SetPitch(pitch);
-                    _ballroll.Update(_playback);
+                    _ballrollPlayback = _ballroll.Start();
+                    _ballroll.SetPitch(ballrollPitch);
+                    _ballroll.Update(_ballrollPlayback);
                 }
             }
             
+            // Same thing just for spark sounds
             if (_player.IsOnGround() && rounded > 40f && _ballroll.GetStatus() == CriAtomExPlayer.Status.Playing && startTime >= 0.4f)
             {
                 if (_spark.GetStatus() == CriAtomExPlayer.Status.Playing)
                 {
-                    if (pitch >= 1100f)
+                    if (sparkPitch >= 1100f)
                     {
                         _spark.SetPitch(1100f);
-                        _spark.SetVolume(1.0f);
+                        _spark.SetVolume(0.7f);
                         _spark.Update(_sparkPlayback);
                     }
                     else
                     {
                         _spark.SetPitch(sparkPitch);
-                        _spark.SetVolume(sparVol);
+                        _spark.SetVolume(sparkVol);
                         _spark.Update(_sparkPlayback);
                     }
                 }
@@ -105,7 +114,7 @@ namespace DynamicRoll
                 {
                     _sparkPlayback = _spark.Start();
                     _spark.SetPitch(sparkPitch);
-                    _spark.SetVolume(sparVol);
+                    _spark.SetVolume(sparkVol);
                     _spark.Update(_sparkPlayback);
                 }
             }
