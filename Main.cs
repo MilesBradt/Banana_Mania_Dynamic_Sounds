@@ -21,19 +21,19 @@ namespace DynamicRoll
         public static void OnModUpdate()
         {
             var player = Object.FindObjectOfType<Player>();
-   
-            if (player == null) 
+
+            if (player == null)
             {
                 Object.Destroy(_dynamicRoll);
                 _dynamicRoll = null;
-                return; 
-            } 
+                return;
+            }
 
             if (_dynamicRoll == null)
             {
                 _cameraController = player.GetCameraController();
-                _dynamicRoll = new SoundController(_cameraController.gameObject.AddComponent(Il2CppType.Of<SoundController>()).Pointer); 
-            } 
+                _dynamicRoll = new SoundController(_cameraController.gameObject.AddComponent(Il2CppType.Of<SoundController>()).Pointer);
+            }
         }
     }
 }
