@@ -10,16 +10,89 @@ using UnityEngine;
 namespace DynamicRoll
 {
     
+    class SpeedToPitch
+    {
+        public void setPitch(float pitch, CriAtomExPlayer audio, CriAtomExPlayback playback)
+        {
+            if (pitch >= 1100f)
+            {
+                audio.SetPitch(1100f);
+                audio.Update(playback);
+            } else
+            {
+                audio.SetPitch(pitch);
+                audio.Update(playback);
+            } 
+        }
+
+        public void setSparkVol(float vol, CriAtomExPlayer audio, CriAtomExPlayback playback)
+        {
+            if (vol >= 0.6f)
+            {
+                audio.SetVolume(0.6f);
+                audio.Update(playback);
+            } else
+            {
+                audio.SetVolume(vol);
+                audio.Update(playback);
+            }
+        }
+    }
+
+    class ImpactAudio
+    {
+        public void playSfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
+        {
+            audio.SetCue(acb, sfx);
+            if(sfx != "timer")
+            {
+                CriAtomExPlayback playback = audio.Start();
+                audio.SetVolume(1.2f);
+                audio.Update(playback);
+            } else
+            {
+                audio.Start();
+            }
+        }
+    }
+
+    class Impact : ImpactAudio
+    {
+        public void calcImpact (CriAtomExPlayer audio, CriAtomExAcb acb, float impact)
+        {
+            if (impact <= 6.5)
+            {
+                playSfx(audio, acb, "jump");
+            }
+            else if (impact > 6.5 && impact <= 9.5)
+            {
+
+                playSfx(audio, acb, "1up");
+            }
+            else
+            {
+                playSfx(audio, acb, "timer");
+            }
+        }
+
+        public void softImpact (CriAtomExPlayer audio, CriAtomExAcb acb)
+        {
+            playSfx(audio, acb, "ballbound");
+        }
+    }
     internal class SoundController : MonoBehaviour
     {
         public SoundController(IntPtr value) : base(value) { }
 
         private Player _player;
+        private SpeedToPitch _speedToPitch;
+        private Impact _impact;
 
         private CriAtomExPlayer _ballroll;
         private CriAtomExPlayer _spark;
-        private CriAtomExPlayer _bonks;
-        private CriAtomExAcb _bonkAcb;
+        private CriAtomExPlayer _impactPlayer;
+
+        private CriAtomExAcb _impactAcb;
 
         private CriAtomExPlayback _ballrollPlayback;
         private CriAtomExPlayback _sparkPlayback;
@@ -37,8 +110,9 @@ namespace DynamicRoll
 
         private void Awake()
         {
-
             _player = FindObjectOfType<Player>();
+            _speedToPitch = new SpeedToPitch();
+            _impact = new Impact();
 
             _boundArray = new List<float>();
             _collideArray = new List<float>();
@@ -48,15 +122,14 @@ namespace DynamicRoll
             // Reads acb file from current directory
             string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\ballroll_default.acb");
             string sparkPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\spark_default.acb");
-            string bonkPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\bonks.acb");
+            string impactPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\bonks.acb");
 
-            // Create new sound player
+            // Create players for each sfx
             _ballroll = new CriAtomExPlayer();
-  
             _spark = new CriAtomExPlayer();
-            _bonks = new CriAtomExPlayer();
+            _impactPlayer = new CriAtomExPlayer();
 
-            // Load specific sounds from sound bank
+            // Load sound banks
             CriAtomExAcb ballrollAcb = CriAtomExAcb.LoadAcbFile(null, path, null);
             _ballroll.SetCue(ballrollAcb, "1up");
             _ballroll.AttachFader();
@@ -73,30 +146,87 @@ namespace DynamicRoll
             _sparkPlayback = _spark.Start();
             _spark.Update(_sparkPlayback);
 
-            _bonkAcb = CriAtomExAcb.LoadAcbFile(null, bonkPath, null);
-
+            _impactAcb = CriAtomExAcb.LoadAcbFile(null, impactPath, null);
         }
 
 
         private void Update()
         {
+            
             // Calculated speed based off square magnitude, multiplied and rounded to X.XX
             var playerSpeed = _player.m_PhysicsBall.m_Velocity.sqrMagnitude * 1000f;
             var rounded = Math.Round(playerSpeed, 2);
+
+            //// My best guess on the linear equations they used in the GC games based on audio
+            var ballrollPitch = (float)(10.14f * rounded) - 574.23f;
+            var sparkPitch = (float)(11.673f * rounded) - 844.251f;
+            var sparkVol = (float)(0.004f * rounded) - 0.011f;
+
+            // Time on ground
+            if (_player.IsOnGround())
+            {
+                _groundTime += Time.deltaTime;
+            }
+            else if (!_player.IsOnGround())
+            {
+                _groundTime = 0;
+            }
+
+            // Flags for disabling sound
+            if (!_player.IsOnGround() || rounded <= 40f || GameManager.IsPause())
+            {
+                _spark.Stop();
+            }
+
+            if (!_player.IsOnGround() || rounded <= 3f || GameManager.IsPause())
+            {
+                _ballroll.Stop();
+            }
+
+            // Flags for enabling sound
+            if (_player.IsOnGround() && rounded > 3f && _groundTime >= 0.3f)
+            {
+
+                if (_ballroll.GetStatus() != CriAtomExPlayer.Status.Stop)
+                {
+                    _speedToPitch.setPitch(ballrollPitch, _ballroll, _ballrollPlayback);
+                }
+                else
+                {
+                    _ballrollPlayback = _ballroll.Start();
+                    _speedToPitch.setPitch(ballrollPitch, _ballroll, _ballrollPlayback);
+                }
+
+            }
+
+            if (_player.IsOnGround() && rounded > 40f && _groundTime >= 0.3f)
+            {
+                if (_spark.GetStatus() != CriAtomExPlayer.Status.Stop)
+                {
+                    _speedToPitch.setSparkVol(sparkVol, _spark, _sparkPlayback);
+                    _speedToPitch.setPitch(sparkPitch, _spark, _sparkPlayback);
+
+                }
+                else
+                {
+                    _sparkPlayback = _spark.Start();
+                    _speedToPitch.setSparkVol(sparkVol, _spark, _sparkPlayback);
+                    _speedToPitch.setPitch(sparkPitch, _spark, _sparkPlayback);
+                }
+            }
 
             float soft = _player.m_PhysicsBall.m_CollisionSphere.m_IntentPos.sqrMagnitude.CompareTo(_player.m_PhysicsBall.m_Pos.sqrMagnitude);
 
             if (soft != -1)
             {
                 Vector3 normal = _player.m_PhysicsBall.m_Pos.normalized;
-
                 float vectorDot = Vector3.Dot(normal, _player.m_relativeVelo);
                 float drop = Math.Abs(_player.m_PhysicsBall.m_Pos.y - _player.m_PhysicsBall.m_OldPos.y);
-                _intensity = Math.Abs(vectorDot);
+                float intensity = Math.Abs(vectorDot);
 
                 _collideArray.Insert(_collideInt++, soft);
                 _dropArray.Insert(_dropInt++, drop);
-                _softArray.Insert(_softInt++, _intensity);
+                _softArray.Insert(_softInt++, intensity);
             }
 
             if (_player.m_BoundTimer > 0)
@@ -119,29 +249,10 @@ namespace DynamicRoll
             else if (_player.m_BoundTimer <= 0 && _boundArray.Any())
             {
                 float maxIntensity = _boundArray.Max();
-
-                if (maxIntensity <= 6)
-                {
-                    _bonks.SetCue(_bonkAcb, "jump");
-                    _bonks.SetVolume(1.2f);
-                    _bonks.Update(_bonks.Start());
-                    _bonks.Start();
-                }
-                else if (maxIntensity > 6 && maxIntensity <= 8.5)
-                {
-                    _bonks.SetCue(_bonkAcb, "1up");
-                    _bonks.SetVolume(1.1f);
-                    _bonks.Update(_bonks.Start());
-                }
-                else
-                {
-                    _bonks.SetCue(_bonkAcb, "timer");
-                    _bonks.SetVolume(0.9f);
-                    _bonks.Update(_bonks.Start());
-                }
+                _impact.calcImpact(_impactPlayer, _impactAcb, maxIntensity);
                 _boundArray.Clear();
             }
-            else if (_collideArray.Any() && soft == -1 && _intensity > 1.5f)
+            else if (_collideArray.Any() && soft == -1 && _intensity > 1.5f && _player.m_PhysicsBall.m_CollisionSphere.isHit && _intensity < 6f)
             {
                 float maxDrop = _dropArray.Max();
 
@@ -153,9 +264,8 @@ namespace DynamicRoll
                     _collideInt = 0;
                     _dropInt = 0;
                     _softInt = 0;
-                    _bonks.SetCue(_bonkAcb, "ballbound");
-                    _bonks.SetVolume(1.2f);
-                    _bonks.Update(_bonks.Start());
+
+                    _impact.softImpact(_impactPlayer, _impactAcb);
                 }
                 else if (maxDrop <= 0.02)
                 {
@@ -165,9 +275,7 @@ namespace DynamicRoll
                     _collideInt = 0;
                     _dropInt = 0;
                     _softInt = 0;
-                    _bonks.SetCue(_bonkAcb, "ballbound");
-                    _bonks.SetVolume(1.2f);
-                    _bonks.Update(_bonks.Start());
+                    _impact.softImpact(_impactPlayer, _impactAcb);
                 }
                 else
                 {
@@ -179,95 +287,7 @@ namespace DynamicRoll
                     _softInt = 0;
                 }
 
-            }
-
-            // My best guess on the linear equations they used in the GC games based on audio
-            var ballrollPitch = (float)(10.14f * rounded) - 574.23f;
-            var sparkPitch = (float)(11.673f * rounded) - 844.251f;
-            var sparkVol = (float)(0.004f * rounded) - 0.011f;
-
-            if (!_player.IsOnGround())
-            {
-                _groundTime = 0;
-            }
-
-            // Flags to mute sound, prevents audio popping
-            if (!_player.IsOnGround() || rounded <= 3f || GameManager.IsPause())
-            {
-                _ballroll.SetVolume(0.0f);
-                _ballroll.Update(_ballrollPlayback);
-
-                _spark.SetVolume(0.0f);
-                _spark.Update(_sparkPlayback);
-
-            }
-
-            if (!_player.IsOnGround() || rounded <= 40f || GameManager.IsPause())
-            {
-                _spark.SetVolume(0.0f);
-                _spark.Update(_sparkPlayback);
-            }
-
-
-            // Flags for enabling sound
-            if (_player.IsOnGround() && rounded > 3f)
-            {
-                // Counts how long enabled flag is lasting
-                _groundTime += Time.deltaTime;
-
-                // If on the ground for more than 0.4 seconds, play sounds
-                if (_ballroll.GetStatus() == CriAtomExPlayer.Status.Playing && _groundTime >= 0.3f)
-                {
-                    // Max threshold for pitch shifting
-                    if (ballrollPitch >= 1100f)
-                    {
-                        _ballroll.SetVolume(1f);
-                        _ballroll.SetPitch(1100f);
-                        _ballroll.Update(_ballrollPlayback);
-                    }
-                    else
-                    {
-                        _ballroll.SetVolume(1f);
-                        _ballroll.SetPitch(ballrollPitch);
-                        _ballroll.Update(_ballrollPlayback);
-                    }
-                }
-                else if (_ballroll.GetStatus() == CriAtomExPlayer.Status.Stop && _groundTime >= 0.3f)
-                {
-                    _ballrollPlayback = _ballroll.Start();
-                    _ballroll.SetVolume(1f);
-                    _ballroll.SetPitch(ballrollPitch);
-                    _ballroll.Update(_ballrollPlayback);
-                }
-            }
-
-            // Same thing just for spark sounds
-            if (_player.IsOnGround() && rounded > 40f && _groundTime >= 0.3f)
-            {
-                if (_spark.GetStatus() == CriAtomExPlayer.Status.Playing)
-                {
-                    if (sparkPitch >= 1100f)
-                    {
-                        _spark.SetPitch(1100f);
-                        _spark.SetVolume(0.6f);
-                        _spark.Update(_sparkPlayback);
-                    }
-                    else
-                    {
-                        _spark.SetPitch(sparkPitch);
-                        _spark.SetVolume(sparkVol);
-                        _spark.Update(_sparkPlayback);
-                    }
-                }
-                else if (_spark.GetStatus() == CriAtomExPlayer.Status.Stop && _groundTime >= 0.5f)
-                {
-                    _sparkPlayback = _spark.Start();
-                    _spark.SetPitch(sparkPitch);
-                    _spark.SetVolume(sparkVol);
-                    _spark.Update(_sparkPlayback);
-                }
-            }
-
+            } 
         }
 
         private void OnDisable()
@@ -276,8 +296,5 @@ namespace DynamicRoll
             _spark.Stop();
         }
     }
-
-    
-
 }
 
