@@ -10,7 +10,7 @@ using static Flash2.Chara;
 
 namespace DynamicRoll
 {
-    
+
     class SpeedToPitch
     {
         public void setPitch(float pitch, CriAtomExPlayer audio, CriAtomExPlayback playback)
@@ -19,11 +19,12 @@ namespace DynamicRoll
             {
                 audio.SetPitch(1100f);
                 audio.Update(playback);
-            } else
+            }
+            else
             {
                 audio.SetPitch(pitch);
                 audio.Update(playback);
-            } 
+            }
         }
 
         public void setSparkVol(float vol, CriAtomExPlayer audio, CriAtomExPlayback playback)
@@ -32,7 +33,8 @@ namespace DynamicRoll
             {
                 audio.SetVolume(0.6f);
                 audio.Update(playback);
-            } else
+            }
+            else
             {
                 audio.SetVolume(vol);
                 audio.Update(playback);
@@ -45,21 +47,24 @@ namespace DynamicRoll
         public void playSfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
         {
             audio.SetCue(acb, sfx);
-            if(sfx != "timer")
+
+            if (sfx != "timer")
             {
                 CriAtomExPlayback playback = audio.Start();
                 audio.SetVolume(1.2f);
                 audio.Update(playback);
-            } else
+            }
+            else
             {
                 audio.Start();
             }
+
         }
     }
 
     class Impact : ImpactAudio
     {
-        public void calcImpact (CriAtomExPlayer audio, CriAtomExAcb acb, float impact)
+        public void calcImpact(CriAtomExPlayer audio, CriAtomExAcb acb, float impact)
         {
             if (impact <= 6.5)
             {
@@ -76,7 +81,7 @@ namespace DynamicRoll
             }
         }
 
-        public void softImpact (CriAtomExPlayer audio, CriAtomExAcb acb)
+        public void softImpact(CriAtomExPlayer audio, CriAtomExAcb acb)
         {
             playSfx(audio, acb, "ballbound");
         }
@@ -87,11 +92,14 @@ namespace DynamicRoll
         public void playSfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
         {
             audio.SetCue(acb, sfx);
-            if (audio.GetStatus() != CriAtomExPlayer.Status.Playing)
+            if (sfx == "fallout" || sfx == "timeover")
             {
                 audio.Start();
             }
-            
+            else if (audio.GetStatus() != CriAtomExPlayer.Status.Playing)
+            {
+                audio.Start();
+            }
         }
     }
 
@@ -113,7 +121,8 @@ namespace DynamicRoll
                 if (player.charaKind.ToString().ToLower() == "yanyan")
                 {
                     playSfx(audio, acb, "yabai_long");
-                } else
+                }
+                else
                 {
                     playSfx(audio, acb, "thankyou");
                 }
@@ -149,7 +158,8 @@ namespace DynamicRoll
             if (banana == 1)
             {
                 playSfx(audio, acb, "1up");
-            } else if (banana == 10)
+            }
+            else if (banana == 10)
             {
                 playSfx(audio, acb, "timer");
             }
@@ -172,7 +182,7 @@ namespace DynamicRoll
         private CriAtomExPlayer _impactPlayer;
         private CriAtomExPlayer _monkeePlayer;
         private CriAtomExPlayer _bananaPlayer;
-        
+
         private CriAtomExAcb _impactAcb;
         private CriAtomExAcb _monkeeAcb;
         private CriAtomExAcb _bananaAcb;
@@ -189,10 +199,11 @@ namespace DynamicRoll
         private int _dropInt = 0;
         private int _softInt = 0;
         private int _harvestedBananas;
+        private int _timer;
         private float _groundTime;
         private float _intensity;
 
-        
+
 
         private void Awake()
         {
@@ -212,9 +223,14 @@ namespace DynamicRoll
 
             string monkee = _player.charaKind.ToString().ToLower();
 
-            if (monkeeArray.Contains(monkee)) 
+            if (monkeeArray.Contains(monkee))
             {
                 string monkeePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\vo_" + monkee + ".acb");
+                _monkeeAcb = CriAtomExAcb.LoadAcbFile(null, monkeePath, null);
+            }
+            else
+            {
+                string monkeePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\vo_muted.acb");
                 _monkeeAcb = CriAtomExAcb.LoadAcbFile(null, monkeePath, null);
             }
 
@@ -228,8 +244,8 @@ namespace DynamicRoll
             _ballroll = new CriAtomExPlayer();
             _spark = new CriAtomExPlayer();
             _impactPlayer = new CriAtomExPlayer();
-            _monkeePlayer = new CriAtomExPlayer();
             _bananaPlayer = new CriAtomExPlayer();
+            _monkeePlayer = new CriAtomExPlayer();
 
             // Load sound banks
             CriAtomExAcb ballrollAcb = CriAtomExAcb.LoadAcbFile(null, path, null);
@@ -255,7 +271,9 @@ namespace DynamicRoll
 
         private void Update()
         {
+            Console.WriteLine(MainGame.mainGameStage.m_GameTimer);
             int mainBananas = MainGame.mainGameStage.m_HarvestedBananaCount;
+            
 
             if (_harvestedBananas != mainBananas)
             {
@@ -344,6 +362,7 @@ namespace DynamicRoll
 
             if (_player.m_BoundTimer > 0)
             {
+                _timer = MainGame.mainGameStage.m_GameTimer;
                 _collideArray.Clear();
                 _dropArray.Clear();
                 _softArray.Clear();
@@ -361,10 +380,21 @@ namespace DynamicRoll
             }
             else if (_player.m_BoundTimer <= 0 && _boundArray.Any())
             {
-                float maxIntensity = _boundArray.Max();
-                _impact.calcImpact(_impactPlayer, _impactAcb, maxIntensity);
-                _monkee.calcImpact(_monkeePlayer, _monkeeAcb, maxIntensity, _player);
+                
+                int timePast = _timer -= MainGame.mainGameStage.m_GameTimer;
+                if (timePast <= 1)
+                {
+                    _impact.calcImpact(_impactPlayer, _impactAcb, 10f);
+                } else
+                {
+                    float maxIntensity = _boundArray.Max();
+                    _impact.calcImpact(_impactPlayer, _impactAcb, maxIntensity);
+                    _monkee.calcImpact(_monkeePlayer, _monkeeAcb, maxIntensity, _player);
+                }
+                
                 _boundArray.Clear();
+
+
             }
             else if (_collideArray.Any() && soft == -1 && _intensity > 1.5f && _player.m_PhysicsBall.m_CollisionSphere.isHit && _intensity < 6f)
             {
@@ -401,7 +431,7 @@ namespace DynamicRoll
                     _softInt = 0;
                 }
 
-            } 
+            }
         }
 
         private void OnDisable()
@@ -411,7 +441,7 @@ namespace DynamicRoll
             _impactPlayer.Stop();
             _monkeePlayer.Stop();
             _bananaPlayer.Stop();
-    }
+        }
     }
 }
 
