@@ -5,7 +5,7 @@ using UnhollowerRuntimeLib;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace DynamicRoll
+namespace DynamicSounds
 {
     // Honestly I don't know C# well enough, this just works and I'm not touching it
     public static class Main

@@ -8,7 +8,7 @@ using Framework.UI;
 using UnityEngine;
 using static Flash2.Chara;
 
-namespace DynamicRoll
+namespace DynamicSounds
 {
 
     class SpeedToPitch
@@ -89,15 +89,16 @@ namespace DynamicRoll
 
     class MonkeeAudio
     {
-        public void playSfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
+        public void playSfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx, float timer)
         {
-            audio.SetCue(acb, sfx);
-            if (sfx == "fallout" || sfx == "timeover")
+            if (audio.GetStatus() == CriAtomExPlayer.Status.Playing && timer >= 0.2f)
             {
+                audio.Stop();
+                audio.SetCue(acb, sfx);
                 audio.Start();
-            }
-            else if (audio.GetStatus() != CriAtomExPlayer.Status.Playing)
+            } else
             {
+                audio.SetCue(acb, sfx);
                 audio.Start();
             }
         }
@@ -105,39 +106,39 @@ namespace DynamicRoll
 
     class Monkee : MonkeeAudio
     {
-        public void calcImpact(CriAtomExPlayer audio, CriAtomExAcb acb, float impact, Player player)
+        public void calcImpact(CriAtomExPlayer audio, CriAtomExAcb acb, float impact, Player player, float timer)
         {
             if (impact <= 6.5)
             {
-                playSfx(audio, acb, "goal_fly");
+                playSfx(audio, acb, "goal_fly", timer);
             }
             else if (impact > 6.5 && impact <= 9.5)
             {
 
-                playSfx(audio, acb, "hanauta");
+                playSfx(audio, acb, "hanauta", timer);
             }
             else
             {
                 if (player.charaKind.ToString().ToLower() == "yanyan")
                 {
-                    playSfx(audio, acb, "yabai_long");
+                    playSfx(audio, acb, "yabai_long", timer);
                 }
                 else
                 {
-                    playSfx(audio, acb, "thankyou");
+                    playSfx(audio, acb, "thankyou", timer);
                 }
             }
         }
 
-        public void calcBanana(CriAtomExPlayer audio, CriAtomExAcb acb, int banana)
+        public void calcBanana(CriAtomExPlayer audio, CriAtomExAcb acb, int banana, float timer)
         {
             if (banana == 1)
             {
-                playSfx(audio, acb, "fallout");
+                playSfx(audio, acb, "fallout", timer);
             }
             else if (banana == 10)
             {
-                playSfx(audio, acb, "timeover");
+                playSfx(audio, acb, "timeover", timer);
             }
         }
     }
@@ -201,12 +202,13 @@ namespace DynamicRoll
         private int _harvestedBananas;
         private int _timer;
         private float _groundTime;
+        private float _bufferTime;
         private float _intensity;
 
 
 
         private void Awake()
-        {
+       {
             _player = FindObjectOfType<Player>();
 
             _speedToPitch = new SpeedToPitch();
@@ -220,6 +222,7 @@ namespace DynamicRoll
             _softArray = new List<float>();
 
             string[] monkeeArray = new string[] { "aiai", "baby", "doctor", "gongon", "jam", "jet", "meemee", "yanyan" };
+            string[] notMonkeeArray = new string[] { "beat", "dlc01", "dlc02", "dlc03", "kiryu", "sonic", "tails" };
 
             string monkee = _player.charaKind.ToString().ToLower();
 
@@ -227,18 +230,31 @@ namespace DynamicRoll
             {
                 string monkeePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\vo_" + monkee + ".acb");
                 _monkeeAcb = CriAtomExAcb.LoadAcbFile(null, monkeePath, null);
+
+                string bananaPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\bananas.acb");
+                _bananaAcb = CriAtomExAcb.LoadAcbFile(null, bananaPath, null);
             }
-            else
+            else if (notMonkeeArray.Contains(monkee))
             {
                 string monkeePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\vo_muted.acb");
                 _monkeeAcb = CriAtomExAcb.LoadAcbFile(null, monkeePath, null);
+
+                string bananaPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\bananas_muted.acb");
+                _bananaAcb = CriAtomExAcb.LoadAcbFile(null, bananaPath, null);
+            } else
+            {
+                string monkeePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\vo_muted.acb");
+                _monkeeAcb = CriAtomExAcb.LoadAcbFile(null, monkeePath, null);
+
+                string bananaPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\bananas.acb");
+                _bananaAcb = CriAtomExAcb.LoadAcbFile(null, bananaPath, null);
             }
+        
 
             // Reads acb file from current directory
             string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\ballroll_default.acb");
             string sparkPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\spark_default.acb");
             string impactPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\bonks.acb");
-            string bananaPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\bananas.acb");
 
             // Create players for each sfx
             _ballroll = new CriAtomExPlayer();
@@ -265,23 +281,23 @@ namespace DynamicRoll
             _spark.Update(_sparkPlayback);
 
             _impactAcb = CriAtomExAcb.LoadAcbFile(null, impactPath, null);
-            _bananaAcb = CriAtomExAcb.LoadAcbFile(null, bananaPath, null);
+            _timer = MainGame.mainGameStage.m_GameTimer;
         }
 
 
         private void Update()
         {
-            Console.WriteLine(MainGame.mainGameStage.m_GameTimer);
             int mainBananas = MainGame.mainGameStage.m_HarvestedBananaCount;
+            _bufferTime += Time.deltaTime;
             
 
             if (_harvestedBananas != mainBananas)
             {
                 int collected = mainBananas - _harvestedBananas;
-                Console.WriteLine(collected);
                 _harvestedBananas = mainBananas;
                 _banana.calcCollected(_bananaPlayer, _bananaAcb, collected);
-                _monkee.calcBanana(_monkeePlayer, _monkeeAcb, collected);
+                _monkee.calcBanana(_monkeePlayer, _monkeeAcb, collected, _bufferTime);
+                _bufferTime = 0;
             }
 
             // Calculated speed based off square magnitude, multiplied and rounded to X.XX
@@ -362,7 +378,7 @@ namespace DynamicRoll
 
             if (_player.m_BoundTimer > 0)
             {
-                _timer = MainGame.mainGameStage.m_GameTimer;
+                
                 _collideArray.Clear();
                 _dropArray.Clear();
                 _softArray.Clear();
@@ -380,19 +396,19 @@ namespace DynamicRoll
             }
             else if (_player.m_BoundTimer <= 0 && _boundArray.Any())
             {
-                
-                int timePast = _timer -= MainGame.mainGameStage.m_GameTimer;
-                if (timePast <= 1)
+                int timePast = _timer - MainGame.mainGameStage.m_GameTimer;
+                if (timePast <= 10)
                 {
                     _impact.calcImpact(_impactPlayer, _impactAcb, 10f);
                 } else
                 {
                     float maxIntensity = _boundArray.Max();
                     _impact.calcImpact(_impactPlayer, _impactAcb, maxIntensity);
-                    _monkee.calcImpact(_monkeePlayer, _monkeeAcb, maxIntensity, _player);
+                    _monkee.calcImpact(_monkeePlayer, _monkeeAcb, maxIntensity, _player, _bufferTime);
                 }
                 
                 _boundArray.Clear();
+                _bufferTime = 0;
 
 
             }
