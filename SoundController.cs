@@ -400,19 +400,18 @@ namespace DynamicSounds
                 if (timePast <= 10)
                 {
                     _impact.calcImpact(_impactPlayer, _impactAcb, 10f);
+                    _boundArray.Clear();
+                    _bufferTime = 0;
                 } else
                 {
                     float maxIntensity = _boundArray.Max();
                     _impact.calcImpact(_impactPlayer, _impactAcb, maxIntensity);
                     _monkee.calcImpact(_monkeePlayer, _monkeeAcb, maxIntensity, _player, _bufferTime);
+                    _boundArray.Clear();
+                    _bufferTime = 0;
                 }
-                
-                _boundArray.Clear();
-                _bufferTime = 0;
-
-
             }
-            else if (_collideArray.Any() && soft == -1 && _intensity > 1.5f && _player.m_PhysicsBall.m_CollisionSphere.isHit && _intensity < 6f)
+            else if (_collideArray.Any() && soft == -1 && _intensity > 1.2f && _player.m_PhysicsBall.m_CollisionSphere.isHit && _intensity < 6f)
             {
                 float maxDrop = _dropArray.Max();
 
