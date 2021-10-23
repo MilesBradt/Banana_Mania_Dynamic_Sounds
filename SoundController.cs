@@ -365,7 +365,7 @@ namespace DynamicSounds
 
             if (_monkeeType == "sonic" || _monkeeType == "tails")
             {
-                string impactPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\bonks_muted.acb");
+                string impactPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\impacts_sonic.acb");
                 _impactAcb = CriAtomExAcb.LoadAcbFile(null, impactPath, null);
             }
             else
