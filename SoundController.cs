@@ -409,8 +409,9 @@ namespace DynamicSounds
             int mainBananas = MainGame.mainGameStage.m_HarvestedBananaCount;
             var playerState = _player.m_PlayerMotion.m_State;
             var playerBalance = _player.m_PlayerMotion.m_UnbalanceState;
+            var bumper = _player.m_MainGameStage.getNearestBumper(_player.m_PhysicsBall.m_Pos);
             _bufferTime += Time.deltaTime;
-
+            
             if (_consoleArray.Contains(_monkeeType) || _guestArray.Contains(_monkeeType))
             {
 
@@ -559,16 +560,20 @@ namespace DynamicSounds
                     _boundArray.Clear();
                     _bufferTime = 0;
                 }
-                else
+                else if (bumper.m_state != Bumper.State.HIT)
                 {
                     float maxIntensity = _boundArray.Max();
                     _impact.calcImpact(_impactPlayer, _impactAcb, maxIntensity);
                     _monkee.calcImpact(_monkeePlayer, _monkeeAcb, maxIntensity, _player, _bufferTime, _isGoal);
                     _boundArray.Clear();
                     _bufferTime = 0;
+                } else
+                {
+                    _boundArray.Clear();
+                    _bufferTime = 0;
                 }
             }
-            else if (_collideArray.Any() && soft == -1 && _intensity > 1.2f && _player.m_PhysicsBall.m_CollisionSphere.isHit && _intensity < 6f)
+            else if (_collideArray.Any() && soft == -1 && _player.m_PhysicsBall.m_CollisionSphere.isHit && _intensity < 6f)
             {
                 float maxDrop = _dropArray.Max();
 
