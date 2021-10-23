@@ -10,7 +10,6 @@ using static Flash2.Chara;
 
 namespace DynamicSounds
 {
-
     class SpeedToPitch
     {
         public void setPitch(float pitch, CriAtomExPlayer audio, CriAtomExPlayback playback)
@@ -89,57 +88,131 @@ namespace DynamicSounds
 
     class MonkeeAudio
     {
-        public void playSfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx, float timer)
+        public void playSfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx, float timer, bool isGoal)
         {
-            if (audio.GetStatus() == CriAtomExPlayer.Status.Playing && timer >= 0.2f)
+            audio.SetCue(acb, sfx);
+
+            if (audio.GetStatus() == CriAtomExPlayer.Status.Playing && timer >= 0.2f && !isGoal)
             {
                 audio.Stop();
-                audio.SetCue(acb, sfx);
-                audio.Start();
-            } else
+                CriAtomExPlayback playback = audio.Start();
+                audio.SetVolume(1.0f);
+                audio.Update(playback);
+            }
+            else if (audio.GetStatus() == CriAtomExPlayer.Status.Playing && timer <= 0.2f || isGoal)
             {
-                audio.SetCue(acb, sfx);
-                audio.Start();
+                // do nothing
+            }
+            else
+            {
+                CriAtomExPlayback playback = audio.Start();
+                audio.SetVolume(1.0f);
+                audio.Update(playback);
+            }
+        }
+
+        public void playOtto(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
+        {
+            audio.SetCue(acb, sfx);
+            audio.Start();
+        }
+
+        public void playFallout(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
+        {
+            audio.SetCue(acb, sfx);
+            if (audio.GetStatus() != CriAtomExPlayer.Status.Playing)
+            {
+                CriAtomExPlayback playback = audio.Start();
+                audio.SetVolume(1.0f);
+                audio.Update(playback);
+            }
+        }
+
+        public void playGoal(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
+        {
+            audio.SetCue(acb, sfx);
+            audio.Start();
+        }
+
+        public void playGoalFly(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
+        {
+            audio.SetCue(acb, sfx);
+            audio.Start();
+        }
+
+        public void playStartSfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
+        {
+            audio.SetCue(acb, sfx);
+            if (audio.GetStatus() != CriAtomExPlayer.Status.Playing)
+            {
+                CriAtomExPlayback playback = audio.Start();
+                audio.SetVolume(1.0f);
+                audio.Update(playback);
             }
         }
     }
 
     class Monkee : MonkeeAudio
     {
-        public void calcImpact(CriAtomExPlayer audio, CriAtomExAcb acb, float impact, Player player, float timer)
+        public void calcImpact(CriAtomExPlayer audio, CriAtomExAcb acb, float impact, Player player, float timer, bool isGoal)
         {
             if (impact <= 6.5)
             {
-                playSfx(audio, acb, "goal_fly", timer);
+                playSfx(audio, acb, "goal_fly", timer, isGoal); ;
             }
             else if (impact > 6.5 && impact <= 9.5)
             {
 
-                playSfx(audio, acb, "hanauta", timer);
+                playSfx(audio, acb, "hanauta", timer, isGoal);
             }
             else
             {
                 if (player.charaKind.ToString().ToLower() == "yanyan")
                 {
-                    playSfx(audio, acb, "yabai_long", timer);
+                    playSfx(audio, acb, "yabai_long", timer, isGoal);
                 }
                 else
                 {
-                    playSfx(audio, acb, "thankyou", timer);
+                    playSfx(audio, acb, "thankyou", timer, isGoal);
                 }
             }
         }
 
-        public void calcBanana(CriAtomExPlayer audio, CriAtomExAcb acb, int banana, float timer)
+        public void calcBanana(CriAtomExPlayer audio, CriAtomExAcb acb, int banana, float timer, bool isGoal)
         {
             if (banana == 1)
             {
-                playSfx(audio, acb, "fallout", timer);
+                playSfx(audio, acb, "fallout", timer, isGoal);
             }
             else if (banana == 10)
             {
-                playSfx(audio, acb, "timeover", timer);
+                playSfx(audio, acb, "timeover", timer, isGoal);
             }
+        }
+
+        public void start(CriAtomExPlayer audio, CriAtomExAcb acb)
+        {
+            playStartSfx(audio, acb, "start");
+        }
+
+        public void unbalance(CriAtomExPlayer audio, CriAtomExAcb acb)
+        {
+            playOtto(audio, acb, "happy_long");
+        }
+
+        public void scream(CriAtomExPlayer audio, CriAtomExAcb acb)
+        {
+            playFallout(audio, acb, "happy");
+        }
+
+        public void goal(CriAtomExPlayer audio, CriAtomExAcb acb)
+        {
+            playGoal(audio, acb, "continue_unselect");
+        }
+
+        public void goalFly(CriAtomExPlayer audio, CriAtomExAcb acb)
+        {
+            playGoalFly(audio, acb, "yabai_long");
         }
     }
 
@@ -147,8 +220,19 @@ namespace DynamicSounds
     {
         public void playSfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
         {
+
             audio.SetCue(acb, sfx);
-            audio.Start();
+
+            if (sfx == "timer")
+            {
+                CriAtomExPlayback playback = audio.Start();
+                audio.SetVolume(0.9f);
+                audio.Update(playback);
+            }
+            else
+            {
+                audio.Start();
+            }
         }
     }
 
@@ -158,7 +242,7 @@ namespace DynamicSounds
         {
             if (banana == 1)
             {
-                playSfx(audio, acb, "1up");
+                playSfx(audio, acb, "bananaget");
             }
             else if (banana == 10)
             {
@@ -167,12 +251,12 @@ namespace DynamicSounds
         }
     }
 
-
     internal class SoundController : MonoBehaviour
     {
         public SoundController(IntPtr value) : base(value) { }
 
         private Player _player;
+        private PlayerMotion _motion;
         private SpeedToPitch _speedToPitch;
         private Impact _impact;
         private Monkee _monkee;
@@ -196,6 +280,13 @@ namespace DynamicSounds
         private List<float> _collideArray;
         private List<float> _dropArray;
         private List<float> _softArray;
+
+        private string[] _monkeeArray;
+        private string[] _guestArray;
+        private string[] _consoleArray;
+        private string[] _dlcArray;
+        private string _monkeeType;
+
         private int _collideInt = 0;
         private int _dropInt = 0;
         private int _softInt = 0;
@@ -205,12 +296,17 @@ namespace DynamicSounds
         private float _bufferTime;
         private float _intensity;
 
-
+        private bool _isStart;
+        private bool _isOffBalance;
+        private bool _isFallout;
+        private bool _isGoal;
+        private bool _isGoalFly;
 
         private void Awake()
-       {
+        {
             _player = FindObjectOfType<Player>();
 
+            _motion = new PlayerMotion();
             _speedToPitch = new SpeedToPitch();
             _impact = new Impact();
             _monkee = new Monkee();
@@ -221,41 +317,61 @@ namespace DynamicSounds
             _dropArray = new List<float>();
             _softArray = new List<float>();
 
-            string[] monkeeArray = new string[] { "aiai", "baby", "doctor", "gongon", "jam", "jet", "meemee", "yanyan" };
-            string[] notMonkeeArray = new string[] { "beat", "dlc01", "dlc02", "dlc03", "kiryu", "sonic", "tails" };
+            _monkeeArray = new string[] { "aiai", "baby", "doctor", "gongon", "jam", "jet", "meemee", "yanyan" };
+            _guestArray = new string[] { "beat", "kiryu", "sonic", "tails" };
+            _consoleArray = new string[] { "dreamcast", "gamegear", "segasaturn" };
+            _dlcArray = new string[] { "suezo", "hellokitty", "morgana" };
 
-            string monkee = _player.charaKind.ToString().ToLower();
+            _monkeeType = _player.charaKind.ToString().ToLower();
 
-            if (monkeeArray.Contains(monkee))
+            if (_monkeeArray.Contains(_monkeeType))
             {
-                string monkeePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\vo_" + monkee + ".acb");
+                string monkeePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\Monkeys\vo_" + _monkeeType + ".acb");
                 _monkeeAcb = CriAtomExAcb.LoadAcbFile(null, monkeePath, null);
 
-                string bananaPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\bananas.acb");
+                string bananaPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\Bananas\bananas.acb");
+                _bananaAcb = CriAtomExAcb.LoadAcbFile(null, bananaPath, null);
+            } 
+            else if (_consoleArray.Contains(_monkeeType))
+            {
+                string monkeePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\Consoles\vo_" + _monkeeType + ".acb");
+                _monkeeAcb = CriAtomExAcb.LoadAcbFile(null, monkeePath, null);
+
+                string bananaPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\Bananas\bananas.acb");
                 _bananaAcb = CriAtomExAcb.LoadAcbFile(null, bananaPath, null);
             }
-            else if (notMonkeeArray.Contains(monkee))
+            else if (_guestArray.Contains(_monkeeType))
             {
-                string monkeePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\vo_muted.acb");
+                string monkeePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\Guests\vo_" + _monkeeType + ".acb");
                 _monkeeAcb = CriAtomExAcb.LoadAcbFile(null, monkeePath, null);
 
-                string bananaPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\bananas_muted.acb");
-                _bananaAcb = CriAtomExAcb.LoadAcbFile(null, bananaPath, null);
-            } else
-            {
-                string monkeePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\vo_muted.acb");
-                _monkeeAcb = CriAtomExAcb.LoadAcbFile(null, monkeePath, null);
-
-                string bananaPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\bananas.acb");
+                string bananaPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\Bananas\bananas_" + _monkeeType + ".acb");
                 _bananaAcb = CriAtomExAcb.LoadAcbFile(null, bananaPath, null);
             }
-        
+            else if (_dlcArray.Contains(_monkeeType))
+            {
+                string monkeePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\DLC\vo_muted.acb");
+                _monkeeAcb = CriAtomExAcb.LoadAcbFile(null, monkeePath, null);
+
+                string bananaPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\Bananas\bananas_muted.acb");
+                _bananaAcb = CriAtomExAcb.LoadAcbFile(null, bananaPath, null);
+            }
 
             // Reads acb file from current directory
             string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\ballroll_default.acb");
             string sparkPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\spark_default.acb");
-            string impactPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\bonks.acb");
 
+            if (_monkeeType == "sonic" || _monkeeType == "tails")
+            {
+                string impactPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\bonks_muted.acb");
+                _impactAcb = CriAtomExAcb.LoadAcbFile(null, impactPath, null);
+            }
+            else
+            {
+                string impactPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\impacts.acb");
+                _impactAcb = CriAtomExAcb.LoadAcbFile(null, impactPath, null);
+            }
+            
             // Create players for each sfx
             _ballroll = new CriAtomExPlayer();
             _spark = new CriAtomExPlayer();
@@ -280,23 +396,64 @@ namespace DynamicSounds
             _sparkPlayback = _spark.Start();
             _spark.Update(_sparkPlayback);
 
-            _impactAcb = CriAtomExAcb.LoadAcbFile(null, impactPath, null);
             _timer = MainGame.mainGameStage.m_GameTimer;
-        }
 
+            _isStart = false;
+            _isFallout = false;
+            _isGoal = false;
+            _isGoalFly = false;
+        }
 
         private void Update()
         {
             int mainBananas = MainGame.mainGameStage.m_HarvestedBananaCount;
+            var playerState = _player.m_PlayerMotion.m_State;
+            var playerBalance = _player.m_PlayerMotion.m_UnbalanceState;
             _bufferTime += Time.deltaTime;
-            
+
+            if (_consoleArray.Contains(_monkeeType) || _guestArray.Contains(_monkeeType))
+            {
+
+                if (_player.m_MainGameStage.m_ReadyGoSequence.isFinished && !_isStart)
+                {
+                    _monkee.start(_monkeePlayer, _monkeeAcb);
+                    _isStart = true;
+                }
+
+                if (playerBalance != PlayerMotion.UnbalanceState.NONE && !_isOffBalance)
+                {
+                    _monkee.unbalance(_monkeePlayer, _monkeeAcb);
+                    _isOffBalance = true;
+                } else if (playerBalance == PlayerMotion.UnbalanceState.NONE && _isOffBalance)
+                {
+                    _isOffBalance = false;
+                }
+
+                if (_player.IsFallOut() && !_isFallout)
+                {
+                    _monkee.scream(_monkeePlayer, _monkeeAcb);
+                    _isFallout = true;
+                }
+
+                if (playerState == PlayerMotion.State.GOAL && !_isGoal)
+                {
+                    _monkee.goal(_monkeePlayer, _monkeeAcb);
+                    _isGoal = true;
+                }
+
+                if (playerState == PlayerMotion.State.GOAL_FLY && !_isGoalFly)
+                {
+                    _monkee.goalFly(_monkeePlayer, _monkeeAcb);
+                    _isGoalFly = true;
+                }
+            }
 
             if (_harvestedBananas != mainBananas)
             {
                 int collected = mainBananas - _harvestedBananas;
                 _harvestedBananas = mainBananas;
                 _banana.calcCollected(_bananaPlayer, _bananaAcb, collected);
-                _monkee.calcBanana(_monkeePlayer, _monkeeAcb, collected, _bufferTime);
+                _monkee.calcBanana(_monkeePlayer, _monkeeAcb, collected, _bufferTime, _isGoal);
                 _bufferTime = 0;
             }
 
@@ -378,7 +535,6 @@ namespace DynamicSounds
 
             if (_player.m_BoundTimer > 0)
             {
-                
                 _collideArray.Clear();
                 _dropArray.Clear();
                 _softArray.Clear();
@@ -402,11 +558,12 @@ namespace DynamicSounds
                     _impact.calcImpact(_impactPlayer, _impactAcb, 10f);
                     _boundArray.Clear();
                     _bufferTime = 0;
-                } else
+                }
+                else
                 {
                     float maxIntensity = _boundArray.Max();
                     _impact.calcImpact(_impactPlayer, _impactAcb, maxIntensity);
-                    _monkee.calcImpact(_monkeePlayer, _monkeeAcb, maxIntensity, _player, _bufferTime);
+                    _monkee.calcImpact(_monkeePlayer, _monkeeAcb, maxIntensity, _player, _bufferTime, _isGoal);
                     _boundArray.Clear();
                     _bufferTime = 0;
                 }
@@ -445,7 +602,6 @@ namespace DynamicSounds
                     _dropInt = 0;
                     _softInt = 0;
                 }
-
             }
         }
 

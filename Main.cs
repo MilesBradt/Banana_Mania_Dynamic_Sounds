@@ -21,7 +21,6 @@ namespace DynamicSounds
         public static void OnModUpdate()
         {
             var player = Object.FindObjectOfType<Player>();
-
             if (player == null)
             {
                 Object.Destroy(_dynamicRoll);
