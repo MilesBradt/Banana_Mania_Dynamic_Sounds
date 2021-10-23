@@ -292,6 +292,7 @@ namespace DynamicSounds
         private int _softInt = 0;
         private int _harvestedBananas;
         private int _timer;
+
         private float _groundTime;
         private float _bufferTime;
         private float _intensity;
@@ -301,6 +302,7 @@ namespace DynamicSounds
         private bool _isFallout;
         private bool _isGoal;
         private bool _isGoalFly;
+        private bool _isBumped;
 
         private void Awake()
         {
@@ -331,7 +333,7 @@ namespace DynamicSounds
 
                 string bananaPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\Bananas\bananas.acb");
                 _bananaAcb = CriAtomExAcb.LoadAcbFile(null, bananaPath, null);
-            } 
+            }
             else if (_consoleArray.Contains(_monkeeType))
             {
                 string monkeePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\Consoles\vo_" + _monkeeType + ".acb");
@@ -371,7 +373,7 @@ namespace DynamicSounds
                 string impactPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), @"Sounds\impacts.acb");
                 _impactAcb = CriAtomExAcb.LoadAcbFile(null, impactPath, null);
             }
-            
+
             // Create players for each sfx
             _ballroll = new CriAtomExPlayer();
             _spark = new CriAtomExPlayer();
@@ -402,6 +404,7 @@ namespace DynamicSounds
             _isFallout = false;
             _isGoal = false;
             _isGoalFly = false;
+            _isBumped = false;
         }
 
         private void Update()
@@ -409,9 +412,11 @@ namespace DynamicSounds
             int mainBananas = MainGame.mainGameStage.m_HarvestedBananaCount;
             var playerState = _player.m_PlayerMotion.m_State;
             var playerBalance = _player.m_PlayerMotion.m_UnbalanceState;
+            var bumperAmount = _player.m_MainGameStage.m_Bumpers._size;
             var bumper = _player.m_MainGameStage.getNearestBumper(_player.m_PhysicsBall.m_Pos);
+
             _bufferTime += Time.deltaTime;
-            
+
             if (_consoleArray.Contains(_monkeeType) || _guestArray.Contains(_monkeeType))
             {
 
@@ -425,7 +430,8 @@ namespace DynamicSounds
                 {
                     _monkee.unbalance(_monkeePlayer, _monkeeAcb);
                     _isOffBalance = true;
-                } else if (playerBalance == PlayerMotion.UnbalanceState.NONE && _isOffBalance)
+                }
+                else if (playerBalance == PlayerMotion.UnbalanceState.NONE && _isOffBalance)
                 {
                     _isOffBalance = false;
                 }
@@ -534,7 +540,39 @@ namespace DynamicSounds
                 _softArray.Insert(_softInt++, intensity);
             }
 
-            if (_player.m_BoundTimer > 0)
+            if (_player.m_BoundTimer > 0 && bumperAmount != 0)
+            {
+                _collideArray.Clear();
+                _dropArray.Clear();
+                _softArray.Clear();
+                _collideInt = 0;
+                _dropInt = 0;
+                _softInt = 0;
+
+                if (bumper.m_state == Bumper.State.HIT)
+                {
+                    _isBumped = true;
+                    Vector3 normal = _player.m_PhysicsBall.m_Pos.normalized;
+
+                    int i = 0;
+                    float vectorDot = Vector3.Dot(normal, _player.m_relativeVelo);
+                    _intensity = Math.Abs(vectorDot);
+
+                    _boundArray.Insert(i++, _intensity);
+                } 
+                else
+                {
+                    Vector3 normal = _player.m_PhysicsBall.m_Pos.normalized;
+
+                    int i = 0;
+                    float vectorDot = Vector3.Dot(normal, _player.m_relativeVelo);
+                    _intensity = Math.Abs(vectorDot);
+
+                    _boundArray.Insert(i++, _intensity);
+                }
+
+            }
+            else if (_player.m_BoundTimer > 0 && bumperAmount == 0)
             {
                 _collideArray.Clear();
                 _dropArray.Clear();
@@ -550,8 +588,10 @@ namespace DynamicSounds
                 _intensity = Math.Abs(vectorDot);
 
                 _boundArray.Insert(i++, _intensity);
+
             }
-            else if (_player.m_BoundTimer <= 0 && _boundArray.Any())
+            
+            if (_player.m_BoundTimer <= 0 && _boundArray.Any() && !_isBumped)
             {
                 int timePast = _timer - MainGame.mainGameStage.m_GameTimer;
                 if (timePast <= 10)
@@ -560,18 +600,22 @@ namespace DynamicSounds
                     _boundArray.Clear();
                     _bufferTime = 0;
                 }
-                else if (bumper.m_state != Bumper.State.HIT)
+                else
                 {
                     float maxIntensity = _boundArray.Max();
                     _impact.calcImpact(_impactPlayer, _impactAcb, maxIntensity);
                     _monkee.calcImpact(_monkeePlayer, _monkeeAcb, maxIntensity, _player, _bufferTime, _isGoal);
                     _boundArray.Clear();
                     _bufferTime = 0;
-                } else
-                {
-                    _boundArray.Clear();
-                    _bufferTime = 0;
                 }
+            }
+            else if (_player.m_BoundTimer <= 0 && _boundArray.Any() && _isBumped)
+            {
+                float maxIntensity = _boundArray.Max();
+                _monkee.calcImpact(_monkeePlayer, _monkeeAcb, maxIntensity, _player, _bufferTime, _isGoal);
+                _boundArray.Clear();
+                _bufferTime = 0;
+                _isBumped = false;
             }
             else if (_collideArray.Any() && soft == -1 && _player.m_PhysicsBall.m_CollisionSphere.isHit && _intensity < 6f)
             {
@@ -613,10 +657,19 @@ namespace DynamicSounds
         private void OnDisable()
         {
             _ballroll.Stop();
+            _ballroll.Dispose();
+
             _spark.Stop();
+            _spark.Dispose();
+
             _impactPlayer.Stop();
+            _impactPlayer.Dispose();
+
             _monkeePlayer.Stop();
+            _monkeePlayer.Dispose();
+
             _bananaPlayer.Stop();
+            _bananaPlayer.Dispose();
         }
     }
 }
