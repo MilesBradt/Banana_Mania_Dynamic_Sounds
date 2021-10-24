@@ -1,11 +1,11 @@
 {
-  "Title": "Dynamic Sounds",
+  "Title": "Dynamic Sounds + Guest Character Voice Pack",
   "Id": "bm.snowman.dynamicroll",
-  "DLLFile": "DynamicSounds.dll",
+  "DLLFile": "DynamicSoundsPlus.dll",
   "Description": "A mod that changes ball rolling sounds based on speed, with impact and monkey sounds",
-  "Version": "2.0.0",
-  "Date": "10/18/2021",
-  "Author": "Snowman",
+  "Version": "2.1.0",
+  "Date": "10/23/2021",
+  "Author": "Snowman and Dead Line",
   "AuthorURL": "https://github.com/MilesBradt",
   "UpdateServer": ""
 }

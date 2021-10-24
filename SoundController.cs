@@ -417,7 +417,7 @@ namespace DynamicSounds
 
             _bufferTime += Time.deltaTime;
 
-            if (_consoleArray.Contains(_monkeeType) || _guestArray.Contains(_monkeeType))
+            if (_consoleArray.Contains(_monkeeType) || _guestArray.Contains(_monkeeType) || _monkeeType == "jam" || _monkeeType == "jet")
             {
 
                 if (_player.m_MainGameStage.m_ReadyGoSequence.isFinished && !_isStart)
