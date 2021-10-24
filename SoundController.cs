@@ -12,7 +12,7 @@ namespace DynamicSounds
 {
     class SpeedToPitch
     {
-        public void setPitch(float pitch, CriAtomExPlayer audio, CriAtomExPlayback playback)
+        public void ChangePitch(float pitch, CriAtomExPlayer audio, CriAtomExPlayback playback)
         {
             if (pitch >= 1100f)
             {
@@ -26,7 +26,7 @@ namespace DynamicSounds
             }
         }
 
-        public void setSparkVol(float vol, CriAtomExPlayer audio, CriAtomExPlayback playback)
+        public void SetSparkVol(float vol, CriAtomExPlayer audio, CriAtomExPlayback playback)
         {
             if (vol >= 0.6f)
             {
@@ -43,7 +43,7 @@ namespace DynamicSounds
 
     class ImpactAudio
     {
-        public void playSfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
+        public void PlaySfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
         {
             audio.SetCue(acb, sfx);
 
@@ -63,32 +63,32 @@ namespace DynamicSounds
 
     class Impact : ImpactAudio
     {
-        public void calcImpact(CriAtomExPlayer audio, CriAtomExAcb acb, float impact)
+        public void CalcImpact(CriAtomExPlayer audio, CriAtomExAcb acb, float impact)
         {
             if (impact <= 6.5)
             {
-                playSfx(audio, acb, "jump");
+                PlaySfx(audio, acb, "jump");
             }
             else if (impact > 6.5 && impact <= 9.5)
             {
 
-                playSfx(audio, acb, "1up");
+                PlaySfx(audio, acb, "1up");
             }
             else
             {
-                playSfx(audio, acb, "timer");
+                PlaySfx(audio, acb, "timer");
             }
         }
 
-        public void softImpact(CriAtomExPlayer audio, CriAtomExAcb acb)
+        public void SoftImpact(CriAtomExPlayer audio, CriAtomExAcb acb)
         {
-            playSfx(audio, acb, "ballbound");
+            PlaySfx(audio, acb, "ballbound");
         }
     }
 
     class MonkeeAudio
     {
-        public void playSfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx, float timer, bool isGoal)
+        public void PlaySfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx, float timer, bool isGoal)
         {
             audio.SetCue(acb, sfx);
 
@@ -111,13 +111,13 @@ namespace DynamicSounds
             }
         }
 
-        public void playOtto(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
+        public void PlayOtto(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
         {
             audio.SetCue(acb, sfx);
             audio.Start();
         }
 
-        public void playFallout(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
+        public void PlayFallout(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
         {
             audio.SetCue(acb, sfx);
             if (audio.GetStatus() != CriAtomExPlayer.Status.Playing)
@@ -128,19 +128,19 @@ namespace DynamicSounds
             }
         }
 
-        public void playGoal(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
+        public void PlayGoal(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
         {
             audio.SetCue(acb, sfx);
             audio.Start();
         }
 
-        public void playGoalFly(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
+        public void PlayGoalFly(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
         {
             audio.SetCue(acb, sfx);
             audio.Start();
         }
 
-        public void playStartSfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
+        public void PlayStartSfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
         {
             audio.SetCue(acb, sfx);
             if (audio.GetStatus() != CriAtomExPlayer.Status.Playing)
@@ -154,71 +154,71 @@ namespace DynamicSounds
 
     class Monkee : MonkeeAudio
     {
-        public void calcImpact(CriAtomExPlayer audio, CriAtomExAcb acb, float impact, Player player, float timer, bool isGoal)
+        public void CalcImpact(CriAtomExPlayer audio, CriAtomExAcb acb, float impact, Player player, float timer, bool isGoal)
         {
             if (impact <= 6.5)
             {
-                playSfx(audio, acb, "goal_fly", timer, isGoal); ;
+                PlaySfx(audio, acb, "goal_fly", timer, isGoal); ;
             }
             else if (impact > 6.5 && impact <= 9.5)
             {
 
-                playSfx(audio, acb, "hanauta", timer, isGoal);
+                PlaySfx(audio, acb, "hanauta", timer, isGoal);
             }
             else
             {
                 if (player.charaKind.ToString().ToLower() == "yanyan")
                 {
-                    playSfx(audio, acb, "yabai_long", timer, isGoal);
+                    PlaySfx(audio, acb, "yabai_long", timer, isGoal);
                 }
                 else
                 {
-                    playSfx(audio, acb, "thankyou", timer, isGoal);
+                    PlaySfx(audio, acb, "thankyou", timer, isGoal);
                 }
             }
         }
 
-        public void calcBanana(CriAtomExPlayer audio, CriAtomExAcb acb, int banana, float timer, bool isGoal)
+        public void CalcBanana(CriAtomExPlayer audio, CriAtomExAcb acb, int banana, float timer, bool isGoal)
         {
             if (banana == 1)
             {
-                playSfx(audio, acb, "fallout", timer, isGoal);
+                PlaySfx(audio, acb, "fallout", timer, isGoal);
             }
             else if (banana == 10)
             {
-                playSfx(audio, acb, "timeover", timer, isGoal);
+                PlaySfx(audio, acb, "timeover", timer, isGoal);
             }
         }
 
-        public void start(CriAtomExPlayer audio, CriAtomExAcb acb)
+        public void StartMap(CriAtomExPlayer audio, CriAtomExAcb acb)
         {
-            playStartSfx(audio, acb, "start");
+            PlayStartSfx(audio, acb, "start");
         }
 
-        public void unbalance(CriAtomExPlayer audio, CriAtomExAcb acb)
+        public void Unbalance(CriAtomExPlayer audio, CriAtomExAcb acb)
         {
-            playOtto(audio, acb, "happy_long");
+            PlayOtto(audio, acb, "happy_long");
         }
 
-        public void scream(CriAtomExPlayer audio, CriAtomExAcb acb)
+        public void Scream(CriAtomExPlayer audio, CriAtomExAcb acb)
         {
-            playFallout(audio, acb, "happy");
+            PlayFallout(audio, acb, "happy");
         }
 
-        public void goal(CriAtomExPlayer audio, CriAtomExAcb acb)
+        public void Goal(CriAtomExPlayer audio, CriAtomExAcb acb)
         {
-            playGoal(audio, acb, "continue_unselect");
+            PlayGoal(audio, acb, "continue_unselect");
         }
 
-        public void goalFly(CriAtomExPlayer audio, CriAtomExAcb acb)
+        public void GoalFly(CriAtomExPlayer audio, CriAtomExAcb acb)
         {
-            playGoalFly(audio, acb, "yabai_long");
+            PlayGoalFly(audio, acb, "yabai_long");
         }
     }
 
     class BananaAudio
     {
-        public void playSfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
+        public void PlaySfx(CriAtomExPlayer audio, CriAtomExAcb acb, string sfx)
         {
 
             audio.SetCue(acb, sfx);
@@ -238,15 +238,15 @@ namespace DynamicSounds
 
     class Banana : BananaAudio
     {
-        public void calcCollected(CriAtomExPlayer audio, CriAtomExAcb acb, int banana)
+        public void CalcCollected(CriAtomExPlayer audio, CriAtomExAcb acb, int banana)
         {
             if (banana == 1)
             {
-                playSfx(audio, acb, "bananaget");
+                PlaySfx(audio, acb, "bananaget");
             }
             else if (banana == 10)
             {
-                playSfx(audio, acb, "timer");
+                PlaySfx(audio, acb, "timer");
             }
         }
     }
@@ -422,13 +422,13 @@ namespace DynamicSounds
 
                 if (_player.m_MainGameStage.m_ReadyGoSequence.isFinished && !_isStart)
                 {
-                    _monkee.start(_monkeePlayer, _monkeeAcb);
+                    _monkee.StartMap(_monkeePlayer, _monkeeAcb);
                     _isStart = true;
                 }
 
                 if (playerBalance != PlayerMotion.UnbalanceState.NONE && !_isOffBalance)
                 {
-                    _monkee.unbalance(_monkeePlayer, _monkeeAcb);
+                    _monkee.Unbalance(_monkeePlayer, _monkeeAcb);
                     _isOffBalance = true;
                 }
                 else if (playerBalance == PlayerMotion.UnbalanceState.NONE && _isOffBalance)
@@ -438,19 +438,19 @@ namespace DynamicSounds
 
                 if (_player.IsFallOut() && !_isFallout)
                 {
-                    _monkee.scream(_monkeePlayer, _monkeeAcb);
+                    _monkee.Scream(_monkeePlayer, _monkeeAcb);
                     _isFallout = true;
                 }
 
                 if (playerState == PlayerMotion.State.GOAL && !_isGoal)
                 {
-                    _monkee.goal(_monkeePlayer, _monkeeAcb);
+                    _monkee.Goal(_monkeePlayer, _monkeeAcb);
                     _isGoal = true;
                 }
 
                 if (playerState == PlayerMotion.State.GOAL_FLY && !_isGoalFly)
                 {
-                    _monkee.goalFly(_monkeePlayer, _monkeeAcb);
+                    _monkee.GoalFly(_monkeePlayer, _monkeeAcb);
                     _isGoalFly = true;
                 }
             }
@@ -459,8 +459,8 @@ namespace DynamicSounds
             {
                 int collected = mainBananas - _harvestedBananas;
                 _harvestedBananas = mainBananas;
-                _banana.calcCollected(_bananaPlayer, _bananaAcb, collected);
-                _monkee.calcBanana(_monkeePlayer, _monkeeAcb, collected, _bufferTime, _isGoal);
+                _banana.CalcCollected(_bananaPlayer, _bananaAcb, collected);
+                _monkee.CalcBanana(_monkeePlayer, _monkeeAcb, collected, _bufferTime, _isGoal);
                 _bufferTime = 0;
             }
 
@@ -500,12 +500,12 @@ namespace DynamicSounds
 
                 if (_ballroll.GetStatus() != CriAtomExPlayer.Status.Stop)
                 {
-                    _speedToPitch.setPitch(ballrollPitch, _ballroll, _ballrollPlayback);
+                    _speedToPitch.ChangePitch(ballrollPitch, _ballroll, _ballrollPlayback);
                 }
                 else
                 {
                     _ballrollPlayback = _ballroll.Start();
-                    _speedToPitch.setPitch(ballrollPitch, _ballroll, _ballrollPlayback);
+                    _speedToPitch.ChangePitch(ballrollPitch, _ballroll, _ballrollPlayback);
                 }
 
             }
@@ -514,15 +514,15 @@ namespace DynamicSounds
             {
                 if (_spark.GetStatus() != CriAtomExPlayer.Status.Stop)
                 {
-                    _speedToPitch.setSparkVol(sparkVol, _spark, _sparkPlayback);
-                    _speedToPitch.setPitch(sparkPitch, _spark, _sparkPlayback);
+                    _speedToPitch.SetSparkVol(sparkVol, _spark, _sparkPlayback);
+                    _speedToPitch.ChangePitch(sparkPitch, _spark, _sparkPlayback);
 
                 }
                 else
                 {
                     _sparkPlayback = _spark.Start();
-                    _speedToPitch.setSparkVol(sparkVol, _spark, _sparkPlayback);
-                    _speedToPitch.setPitch(sparkPitch, _spark, _sparkPlayback);
+                    _speedToPitch.SetSparkVol(sparkVol, _spark, _sparkPlayback);
+                    _speedToPitch.ChangePitch(sparkPitch, _spark, _sparkPlayback);
                 }
             }
 
@@ -596,15 +596,15 @@ namespace DynamicSounds
                 int timePast = _timer - MainGame.mainGameStage.m_GameTimer;
                 if (timePast <= 10)
                 {
-                    _impact.calcImpact(_impactPlayer, _impactAcb, 10f);
+                    _impact.CalcImpact(_impactPlayer, _impactAcb, 10f);
                     _boundArray.Clear();
                     _bufferTime = 0;
                 }
                 else
                 {
                     float maxIntensity = _boundArray.Max();
-                    _impact.calcImpact(_impactPlayer, _impactAcb, maxIntensity);
-                    _monkee.calcImpact(_monkeePlayer, _monkeeAcb, maxIntensity, _player, _bufferTime, _isGoal);
+                    _impact.CalcImpact(_impactPlayer, _impactAcb, maxIntensity);
+                    _monkee.CalcImpact(_monkeePlayer, _monkeeAcb, maxIntensity, _player, _bufferTime, _isGoal);
                     _boundArray.Clear();
                     _bufferTime = 0;
                 }
@@ -612,7 +612,7 @@ namespace DynamicSounds
             else if (_player.m_BoundTimer <= 0 && _boundArray.Any() && _isBumped)
             {
                 float maxIntensity = _boundArray.Max();
-                _monkee.calcImpact(_monkeePlayer, _monkeeAcb, maxIntensity, _player, _bufferTime, _isGoal);
+                _monkee.CalcImpact(_monkeePlayer, _monkeeAcb, maxIntensity, _player, _bufferTime, _isGoal);
                 _boundArray.Clear();
                 _bufferTime = 0;
                 _isBumped = false;
@@ -630,7 +630,7 @@ namespace DynamicSounds
                     _dropInt = 0;
                     _softInt = 0;
 
-                    _impact.softImpact(_impactPlayer, _impactAcb);
+                    _impact.SoftImpact(_impactPlayer, _impactAcb);
                 }
                 else if (maxDrop <= 0.02)
                 {
@@ -640,7 +640,7 @@ namespace DynamicSounds
                     _collideInt = 0;
                     _dropInt = 0;
                     _softInt = 0;
-                    _impact.softImpact(_impactPlayer, _impactAcb);
+                    _impact.SoftImpact(_impactPlayer, _impactAcb);
                 }
                 else
                 {
